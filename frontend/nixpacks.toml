@@ -8,6 +8,23 @@ nixPkgs = ["nodejs_20", "npm"]
 
 [phases.build]
 cmds = [
+    "rm -f package-lock.json",
+    "npm config set legacy-peer-deps true",
+    "npm install --legacy-peer-deps",
+    "npm run build"
+]
+
+[phases.start]
+cmd = "npx serve dist/frontend -p $PORT"cks configuration  
+[variables]
+NODE_ENV = "production"
+NODE_VERSION = "20.17.0"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
+
+[phases.build]
+cmds = [
     "npm ci --legacy-peer-deps --ignore-engines",
     "npm run build"
 ]
