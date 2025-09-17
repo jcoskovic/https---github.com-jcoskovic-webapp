@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://abbrevio-backend.up.railway.app/api', // Railway backend URL
+  apiUrl: 'https://abbrevio-backend-docker.onrender.com/api', // Render backend URL
   appName: 'Abbrevio Demo',
-  version: '1.0.0-railway',
+  version: '1.0.0-railway-render',
   demoMode: false, // Full functionality with backend
   features: {
     auth: true,
