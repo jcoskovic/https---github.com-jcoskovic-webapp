@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: '', // No backend for GitHub Pages demo
+  apiUrl: 'https://profound-creation-production-df1a.up.railway.app/api',
   appName: 'Abbrevio',
-  version: '1.0.0-demo',
-  demoMode: true, // Enable demo mode for GitHub Pages
+  version: '1.0.0',
+  demoMode: false, // Full backend integration
 };
