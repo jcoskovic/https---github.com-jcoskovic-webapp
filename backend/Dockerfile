@@ -43,9 +43,7 @@ RUN mkdir -p /var/www/html/storage/logs \
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
 
-# Generate application key and cache config (without migrations yet)
-RUN php artisan config:cache && \
-    php artisan route:cache
+# Skip caching during build - will be done at runtime with proper environment variables
 
 # Expose port 80 (Apache default)
 EXPOSE 80
