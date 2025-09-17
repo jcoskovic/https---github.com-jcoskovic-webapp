@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://profound-creation-production-df1a.up.railway.app/api',
+  apiUrl: 'https://abbrevio-backend-docker.onrender.com/api', // Updated to Render backend
   appName: 'Abbrevio',
   version: '1.0.0-dev',
 };
