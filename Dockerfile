@@ -11,8 +11,8 @@ COPY frontend/package.json frontend/.npmrc frontend/.nvmrc ./frontend/
 # Remove any existing package-lock.json files
 RUN rm -f package-lock.json frontend/package-lock.json
 
-# Install dependencies with legacy peer deps
-RUN npm install --legacy-peer-deps
+# Install dependencies with legacy peer deps (directly, not via npm script)
+RUN npm install --legacy-peer-deps --no-package-lock
 
 # Install frontend dependencies
 RUN cd frontend && npm install --legacy-peer-deps

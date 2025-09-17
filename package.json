@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "description": "Web aplikacija za upravljanje skraćenicama u organizaciji",
   "scripts": {
-    "preinstall": "rm -f package-lock.json",
-    "install": "npm install --legacy-peer-deps",
     "start": "cd frontend && serve -s dist/frontend -l 4200",
     "build": "cd frontend && ng build --configuration production",
     "frontend": "cd frontend && npm start",
