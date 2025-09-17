@@ -1,49 +1,20 @@
-# Railway Configuration for Abbrevio Multi-Service Application
+# Railway Configuration for Abbrevio
+# Railway will deploy each service separately, not using docker-compose
+
+# This file is mainly for documentation - Railway will auto-detect services
+# from individual Dockerfiles in each directory
 
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "docker-compose.prod.yml"
 
 [deploy]
 numReplicas = 1
 sleepApplication = false
 restartPolicyType = "ON_FAILURE"
 
-# Environment variables that Railway should set
+# Global environment variables for all services
 [env]
 APP_ENV = "production"
 APP_DEBUG = "false"
 NODE_ENV = "production"
 FLASK_ENV = "production"
-
-# Services configuration
-[[services]]
-name = "backend"
-source = "./backend"
-[services.build]
-dockerfile = "Dockerfile"
-[services.deploy]
-startCommand = "bash /var/www/html/scripts/production-setup.sh && php-fpm"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 30
-
-[[services]]
-name = "frontend"  
-source = "./frontend"
-[services.build]
-dockerfile = "Dockerfile.prod"
-buildCommand = "npm run build -- --configuration=railway"
-[services.deploy]
-startCommand = "nginx -g 'daemon off;'"
-healthcheckPath = "/"
-healthcheckTimeout = 10
-
-[[services]]
-name = "ml-service"
-source = "./ml-service"  
-[services.build]
-dockerfile = "Dockerfile"
-[services.deploy]
-startCommand = "python app.py"
-healthcheckPath = "/health"
-healthcheckTimeout = 15

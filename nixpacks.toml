@@ -1,0 +1,19 @@
+# Nixpacks configuration for Railway
+# This helps Railway properly detect and build each service
+
+[variables]
+NODE_ENV = "production"
+NIXPACKS_NO_CACHE = "true"
+
+# Backend service (Laravel)
+[phases.setup]
+dependsOn = []
+
+[phases.install]
+dependsOn = ["setup"]
+
+[phases.build]  
+dependsOn = ["install"]
+
+[phases.start]
+dependsOn = ["build"]

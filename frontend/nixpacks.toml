@@ -1,0 +1,15 @@
+# Frontend nixpacks configuration  
+[variables]
+NODE_ENV = "production"
+
+[phases.build]
+cmds = [
+    "npm ci",
+    "npm run build -- --configuration=railway"
+]
+
+[phases.start]
+cmd = "npx serve dist/abbrevio-frontend -p ${PORT:-4200}"
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "npm"]
