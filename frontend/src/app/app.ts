@@ -15,6 +15,7 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet, RouterLink, CommonModule, UserProfileComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
