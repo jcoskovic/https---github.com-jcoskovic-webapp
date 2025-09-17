@@ -1,9 +1,9 @@
 # Railway ignore file
-# Deploy from root directory with updated package.json
+# Force Railway to use Dockerfile build instead of auto-detection
 
-# Ignore docker compose files
-docker-compose*.yml
-package-lock.json
+# Ignore lock files to force fresh install
+**/package-lock.json
+**/node_modules
 .git
 .github
 scripts/
