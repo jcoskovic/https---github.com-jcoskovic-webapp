@@ -359,3 +359,20 @@ button {
     padding: 12px 24px !important;
   }
 }
+
+/* Fix for Material Dialog z-index in production */
+.cdk-overlay-container {
+  z-index: 9999 !important;
+}
+
+.cdk-overlay-backdrop {
+  z-index: 9998 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 9999 !important;
+}
+
+.mat-mdc-dialog-container {
+  z-index: 10000 !important;
+}
