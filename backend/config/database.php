@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -59,6 +59,21 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
                 PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci',
             ]) : [],
+        ],
+
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'abbrevio'),
+            'username' => env('DB_USERNAME', 'postgres'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
         ],
 
     ],
