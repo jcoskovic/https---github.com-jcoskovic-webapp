@@ -107,7 +107,7 @@ class TrendingService
             ->leftJoin(DB::raw('(
             SELECT 
                 abbreviation_id,
-                SUM(CASE WHEN type = "up" THEN 1 WHEN type = "down" THEN -1 ELSE 0 END) as vote_score
+                SUM(CASE WHEN type = \'up\' THEN 1 WHEN type = \'down\' THEN -1 ELSE 0 END) as vote_score
             FROM votes 
             GROUP BY abbreviation_id
         ) as vote_counts'), 'abbreviations.id', '=', 'vote_counts.abbreviation_id')
@@ -200,7 +200,7 @@ class TrendingService
             'description',
             'category',
             'created_at',
-            DB::raw('COALESCE((SELECT SUM(CASE WHEN type = "up" THEN 1 WHEN type = "down" THEN -1 ELSE 0 END) FROM votes WHERE abbreviation_id = abbreviations.id), 0) as votes_sum'),
+            DB::raw('COALESCE((SELECT SUM(CASE WHEN type = \'up\' THEN 1 WHEN type = \'down\' THEN -1 ELSE 0 END) FROM votes WHERE abbreviation_id = abbreviations.id), 0) as votes_sum'),
             DB::raw('COALESCE((SELECT COUNT(*) FROM comments WHERE abbreviation_id = abbreviations.id), 0) as comments_count')
         )
             ->where('status', 'approved')
