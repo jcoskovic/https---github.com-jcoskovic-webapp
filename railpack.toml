@@ -1,5 +1,11 @@
-[phases.build]
-nixPacksCommands = ["npm install --legacy-peer-deps"]
+[phases.setup]
+aptPkgs = ["curl"]
 
-[phases.start]
+[phases.install]
+cmds = ["npm install --legacy-peer-deps"]
+
+[phases.build] 
+cmds = ["npm run build"]
+
+[start]
 cmd = "npm start"

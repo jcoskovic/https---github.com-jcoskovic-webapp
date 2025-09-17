@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Web aplikacija za upravljanje skraćenicama u organizaciji",
   "scripts": {
+    "preinstall": "rm -f package-lock.json",
+    "install": "npm install --legacy-peer-deps",
     "start": "cd frontend && serve -s dist/frontend -l 4200",
     "build": "cd frontend && ng build --configuration production",
     "frontend": "cd frontend && npm start",
@@ -53,5 +55,9 @@
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "18.3.1",
     "eslint": "^8.57.0"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10.0.0"
   }
 }

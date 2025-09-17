@@ -1,10 +1,9 @@
 # Railway ignore file
-# Railway will deploy each service separately from its own directory
+# Deploy from root directory with updated package.json
 
-# Ignore root level files that aren't needed for individual services
+# Ignore docker compose files
 docker-compose*.yml
-package*.json
-README.md
+package-lock.json
 .git
 .github
 scripts/
