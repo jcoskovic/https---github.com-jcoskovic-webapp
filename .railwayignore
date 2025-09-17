@@ -1,0 +1,16 @@
+# Railway ignore file
+# Railway will deploy each service separately from its own directory
+
+# Ignore root level files that aren't needed for individual services
+docker-compose*.yml
+package*.json
+README.md
+.git
+.github
+scripts/
+.env*
+
+# Let Railway auto-detect services from:
+# - backend/ (Laravel)
+# - frontend/ (Angular)  
+# - ml-service/ (Python Flask)

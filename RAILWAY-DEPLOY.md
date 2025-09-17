@@ -1,54 +1,134 @@
-#!/bin/bash
+# 🚂 Railway Deployment Guide for Abbrevio
 
-# Railway Deployment Guide for Abbrevio
-echo "🚂 Railway Deployment Guide for Abbrevio"
-echo "======================================="
+Kompletna instrukcija za deployment Abbrevio aplikacije na Railway.
 
-echo "📋 Prerequisites:"
-echo "1. Install Railway CLI: npm install -g @railway/cli"
-echo "2. Create Railway account: https://railway.app"
-echo "3. Push code to GitHub repository"
-echo ""
+## 📋 Prerequisites
 
-echo "🚀 Deployment Steps:"
-echo ""
+1. **Railway account**: https://railway.app (registracija s GitHub-om)
+2. **GitHub repository**: Push your code to GitHub
+3. **API keys**: 
+   - GROQ API key (https://console.groq.com/)
+   - Email service credentials (optional)
 
-echo "1️⃣  Login to Railway:"
-echo "   railway login"
-echo ""
+## 🚀 Deployment Steps
 
-echo "2️⃣  Create new project:"
-echo "   railway new"
-echo "   # Select 'Deploy from GitHub repo' and choose your repository"
-echo ""
+### 1️⃣ Create Railway Project
 
-echo "3️⃣  Deploy from GitHub (Recommended):"
-echo "   - Go to Railway dashboard: https://railway.app/new"
-echo "   - Click 'Deploy from GitHub repo'"
-echo "   - Select your repository"
-echo "   - Railway will auto-detect and deploy all services"
-echo ""
+1. Go to Railway dashboard: https://railway.app/new  
+2. Click **"New Project"**
+3. Select **"Empty Project"**
+4. Name your project (e.g., "abbrevio-demo")
 
-echo "4️⃣  Add MySQL database:"
-echo "   - In Railway dashboard, click 'New Service'"
-echo "   - Select 'Database' -> 'MySQL'"
-echo "   - Railway will provide connection variables automatically"
-echo ""
+### 2️⃣ Deploy Services
 
-echo "5️⃣  Set environment variables:"
-echo "   For each service in Railway dashboard:"
-echo "   Backend service:"
-echo "     - GROQ_API_KEY: (your GROQ API key)"
-echo "     - MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD: (email config)"
-echo "     - APP_KEY: (generate with: openssl rand -base64 32)"
-echo "     - JWT_SECRET: (generate with: openssl rand -base64 64)"
-echo ""
-echo "   Frontend service:"
-echo "     - NODE_ENV: production"
-echo ""
-echo "   ML Service:"
-echo "     - GROQ_API_KEY: (same as backend)"
-echo ""
+Deploy each service separately:
+
+#### A) Backend Service (Laravel)
+1. In project dashboard: **"New Service"** → **"GitHub Repo"**
+2. Select your repository
+3. **Set Root Directory**: `backend`
+4. Railway will auto-detect PHP/Laravel and use nixpacks
+
+#### B) Frontend Service (Angular)  
+1. **"New Service"** → **"GitHub Repo"**
+2. Select same repository  
+3. **Set Root Directory**: `frontend`
+4. Railway will auto-detect Node.js/Angular
+
+#### C) ML Service (Python)
+1. **"New Service"** → **"GitHub Repo"**
+2. Select same repository
+3. **Set Root Directory**: `ml-service`  
+4. Railway will auto-detect Python/Flask
+
+#### D) MySQL Database
+1. **"New Service"** → **"Database"** → **"MySQL"**
+2. Railway will create managed MySQL instance
+3. Connection variables will be auto-generated
+
+### 3️⃣ Configure Environment Variables
+
+#### Backend Service Variables:
+```env
+# Required
+GROQ_API_KEY=your-groq-api-key-here
+APP_KEY=base64:your-generated-32-char-key
+JWT_SECRET=your-generated-64-char-secret
+
+# Optional (for email functionality)
+MAIL_HOST=smtp.sendgrid.net
+MAIL_PORT=587
+MAIL_USERNAME=apikey
+MAIL_PASSWORD=your-sendgrid-key
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+```
+
+#### Frontend Service Variables:
+```env
+NODE_ENV=production
+```
+
+#### ML Service Variables:
+```env
+GROQ_API_KEY=your-groq-api-key-here
+FLASK_ENV=production
+```
+
+### 4️⃣ Generate Required Keys
+
+Use these commands to generate secure keys:
+
+```bash
+# APP_KEY (Laravel)
+openssl rand -base64 32
+
+# JWT_SECRET  
+openssl rand -base64 64
+```
+
+### 5️⃣ Run Database Migrations
+
+After backend deployment:
+1. Go to backend service in Railway
+2. Open **"Deployments"** tab  
+3. Click latest deployment → **"View Logs"**
+4. Once deployed, use Railway CLI or dashboard to run:
+   ```bash
+   php artisan migrate --force
+   php artisan db:seed --force --class=ProductionSeeder
+   ```
+
+## ✅ Final Result
+
+After successful deployment you'll have:
+
+- **Frontend**: `https://your-frontend-xyz.up.railway.app`
+- **Backend API**: `https://your-backend-xyz.up.railway.app`  
+- **ML Service**: `https://your-ml-xyz.up.railway.app`
+- **MySQL Database**: Managed by Railway
+
+## 👥 Demo Users
+
+After running the seeder:
+- **Admin**: `admin@abbrevio.demo` / `admin123`
+- **User**: `user@abbrevio.demo` / `user123`
+- **Moderator**: `moderator@abbrevio.demo` / `moderator123`
+
+## 💰 Cost Estimation
+
+- **Hobby Plan**: $5/month covers all services
+- **Free Trial**: Available for testing
+
+## 🔧 Troubleshooting
+
+**Common Issues:**
+
+1. **Build Failures**: Check logs in Railway dashboard
+2. **Database Connection**: Verify MySQL service is running  
+3. **CORS Issues**: Add frontend URL to backend CORS settings
+4. **Environment Variables**: Double-check all required variables are set
+
+**Support**: Railway documentation at https://docs.railway.app
 
 echo "6️⃣  Run database migrations:"
 echo "   railway run --service backend bash ./scripts/production-setup.sh"
