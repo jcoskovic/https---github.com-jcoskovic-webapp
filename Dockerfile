@@ -8,13 +8,15 @@ WORKDIR /app
 COPY package.json .npmrc .nvmrc ./
 COPY frontend/package.json frontend/.npmrc frontend/.nvmrc ./frontend/
 
-# Remove any existing package-lock.json files
+# Remove any existing package-lock.json files  
 RUN rm -f package-lock.json frontend/package-lock.json
 
-# Install dependencies with legacy peer deps (directly, not via npm script)
+# Clear npm cache and install dependencies with legacy peer deps
+RUN npm cache clean --force
 RUN npm install --legacy-peer-deps --no-package-lock
 
-# Install frontend dependencies
+# Install frontend dependencies with fresh cache
+RUN cd frontend && npm cache clean --force
 RUN cd frontend && npm install --legacy-peer-deps
 
 # Copy source code
