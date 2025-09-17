@@ -48,7 +48,7 @@ RUN a2enmod rewrite
 # Expose port 80 (Apache default)
 EXPOSE 80
 
-# Create startup script with cache clearing and migrations
+# Create startup script with cache clearing, migrations and seeding
 RUN echo '#!/bin/bash' > /start.sh && \
     echo 'cd /var/www/html' >> /start.sh && \
     echo 'php artisan config:clear' >> /start.sh && \
@@ -56,6 +56,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'php artisan route:clear' >> /start.sh && \
     echo 'php artisan view:clear' >> /start.sh && \
     echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'php artisan db:seed --force' >> /start.sh && \
     echo 'apache2-foreground' >> /start.sh && \
     chmod +x /start.sh
 
