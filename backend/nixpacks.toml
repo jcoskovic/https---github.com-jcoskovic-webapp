@@ -4,6 +4,8 @@ NODE_ENV = "production"
 
 [phases.install]
 cmds = [
+    "mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache",
+    "chmod -R 755 storage bootstrap/cache",
     "cp .env.example .env || echo 'Using existing .env'",
     "composer install --no-interaction --ignore-platform-reqs"
 ]
