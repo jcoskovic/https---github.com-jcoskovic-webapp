@@ -1,11 +1,15 @@
 # Frontend nixpacks configuration  
 [variables]
 NODE_ENV = "production"
+NODE_VERSION = "20.17.0"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
 
 [phases.build]
 cmds = [
-    "npm ci --only=production",
-    "npm run build --configuration=production"
+    "npm ci --legacy-peer-deps --ignore-engines",
+    "npm run build"
 ]
 
 [phases.start]
