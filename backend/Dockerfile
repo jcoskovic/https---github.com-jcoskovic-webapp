@@ -36,12 +36,18 @@ RUN mkdir -p /var/www/storage/logs \
     && chmod -R 755 /var/www/storage \
     && chmod -R 755 /var/www/bootstrap/cache
 
-# Generate application key and cache config
+# Generate application key and cache config (without migrations yet)
 RUN php artisan config:cache && \
     php artisan route:cache
 
 # Expose port
 EXPOSE 8000
 
-# Start Laravel development server
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+# Create startup script
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
+    chmod +x /start.sh
+
+# Start with migrations then server
+CMD ["/start.sh"]
