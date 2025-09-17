@@ -1,0 +1,91 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+        - tests
+    level: 6
+    # Deprecated options removed; use identifiers in ignoreErrors when needed
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        -
+            identifier: missingType.iterableValue
+            paths:
+                - tests
+        -
+            identifier: missingType.generics
+            paths:
+                - tests
+        # Eloquent relation generic invariance noise
+        -
+            message: '#Template type TDeclaringModel on class .*Relations.*(BelongsTo|HasMany).*is not\s+covariant#'
+            paths:
+                - app/Models
+        -
+            message: '#Property .+ has no type specified#'
+            paths:
+                - tests
+        # Tests: allow missing return/param types and some dynamic mocking APIs
+        -
+            message: '#has no return type specified#'
+            paths:
+                - tests
+        -
+            message: '#has parameter \$.* with no type specified#'
+            paths:
+                - tests
+        -
+            message: '#Result of method .*\(void\) is used#'
+            paths:
+                - tests
+        -
+            message: '#Unable to resolve the template type T(Key|Value) in call to function collect#'
+            paths:
+                - tests
+        -
+            message: '#Unreachable statement - code above always terminates#'
+            paths:
+                - tests
+        -
+            message: '#(Else|Elseif) branch is unreachable#'
+            paths:
+                - tests
+        -
+            message: '#Ternary operator condition is always true#'
+            paths:
+                - tests
+        -
+            message: '#Left side of && is always true#'
+            paths:
+                - tests
+        -
+            message: '#Strict comparison using === between \*NEVER\* and#'
+            paths:
+                - tests
+        -
+            message: '#Call to an undefined method .*shouldReceive\(\)#'
+            paths:
+                - tests
+        -
+            message: '#Call to an undefined method .*once\(\)#'
+            paths:
+                - tests
+        -
+            message: '#does not accept Mockery#'
+            paths:
+                - tests
+        -
+            message: '#expects .+?, Mockery.* given#'
+            paths:
+                - tests
+        -
+            message: '#::with\(\)#'
+            paths:
+                - tests
+    bootstrapFiles:
+        - vendor/autoload.php
+    parallel:
+        maximumNumberOfProcesses: 4

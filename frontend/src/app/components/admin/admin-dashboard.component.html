@@ -1,0 +1,330 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <div class="header-top">
+      <div class="header-title">
+        <h1>Admin Panel</h1>
+        <div class="user-info" *ngIf="currentUser">
+          <span class="user-greeting">Ulogirani kao:</span>
+          <span class="user-name">{{ currentUser.name }}</span>
+          <span class="user-role" [class]="'role-' + currentUser.role">{{
+            getRoleDisplayName(currentUser.role)
+            }}</span>
+        </div>
+      </div>
+    </div>
+    <nav class="dashboard-nav">
+      <button class="nav-btn" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')" role="button"
+        tabindex="0" (keyup.enter)="setActiveTab('overview')">
+        Pregled
+      </button>
+      <button *ngIf="isCurrentUserAdmin()" class="nav-btn" [class.active]="activeTab === 'users'"
+        (click)="setActiveTab('users')" role="button" tabindex="0" (keyup.enter)="setActiveTab('users')">
+        Korisnici
+      </button>
+      <button class="nav-btn" [class.active]="activeTab === 'abbreviations'" (click)="setActiveTab('abbreviations')"
+        role="button" tabindex="0" (keyup.enter)="setActiveTab('abbreviations')">
+        Skraćenice
+      </button>
+      <button class="nav-btn" [class.active]="activeTab === 'moderation'" (click)="setActiveTab('moderation')"
+        role="button" tabindex="0" (keyup.enter)="setActiveTab('moderation')">
+        Skraćenice na čekanju
+      </button>
+    </nav>
+  </div>
+
+  <div class="dashboard-content">
+    <!-- Overview Tab -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content overview-tab">
+      <div class="stats-grid" *ngIf="!isLoadingStats">
+        <div class="stat-card clickable" (click)="setActiveTab('users')" role="button" tabindex="0"
+          (keyup.enter)="setActiveTab('users')" title="Pogledaj sve korisnike">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <h3>{{ statistics.total_users }}</h3>
+            <p>Ukupno korisnika</p>
+          </div>
+        </div>
+
+        <div class="stat-card clickable" (click)="setActiveTab('abbreviations')" role="button" tabindex="0"
+          (keyup.enter)="setActiveTab('abbreviations')" title="Pogledaj sve skraćenice">
+          <div class="stat-icon">📝</div>
+          <div class="stat-info">
+            <h3>{{ statistics.total_abbreviations }}</h3>
+            <p>Ukupno skraćenica</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">👍</div>
+          <div class="stat-info">
+            <h3>{{ statistics.total_votes }}</h3>
+            <p>Ukupno glasova</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💬</div>
+          <div class="stat-info">
+            <h3>{{ statistics.total_comments }}</h3>
+            <p>Ukupno komentara</p>
+          </div>
+        </div>
+
+        <div class="stat-card pending clickable" (click)="setActiveTab('moderation')" role="button" tabindex="0"
+          (keyup.enter)="setActiveTab('moderation')" title="Pogledaj skraćenice na čekanju">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <h3>{{ statistics.pending_abbreviations }}</h3>
+            <p>skraćenice na čekanju</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div *ngIf="isLoadingStats" class="loading">Učitavanje statistika...</div>
+
+      <!-- Top Categories -->
+      <div class="categories-section" *ngIf="statistics.top_categories.length > 0">
+        <h3>Najpopularnije kategorije</h3>
+        <div class="categories-list">
+          <div *ngFor="let category of statistics.top_categories" class="category-item">
+            <span class="category-name">{{ category.name }}</span>
+            <span class="category-count">{{ category.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div *ngIf="activeTab === 'users'" class="tab-content users-tab">
+      <div class="tab-header">
+        <h2>Upravljanje korisnicima</h2>
+        <div class="header-controls">
+          <div class="search-bar">
+            <input type="text" [(ngModel)]="userSearchTerm" placeholder="Pretraži korisnike..." class="search-input" />
+          </div>
+          <div class="batch-actions" *ngIf="filteredUsers.length > 0">
+            <span class="results-count">{{ filteredUsers.length }} korisnika</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="isLoadingUsers" class="loading">Učitavanje korisnika...</div>
+
+      <div *ngIf="!isLoadingUsers && filteredUsers.length > 0" class="users-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Ime</th>
+              <th>Email</th>
+              <th>Uloga</th>
+              <th>Datum registracije</th>
+              <th>skraćenice</th>
+              <th>Glasovi</th>
+              <th>Komentari</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers">
+              <td data-label="Ime">{{ user.name }}</td>
+              <td data-label="Email">{{ user.email }}</td>
+              <td data-label="Uloga">
+                <span class="role-badge" [class]="getRoleBadgeClass(user.role)">
+                  {{ getRoleDisplayName(user.role) }}
+                </span>
+              </td>
+              <td data-label="Datum registracije">
+                {{ formatDate(user.created_at) }}
+              </td>
+              <td data-label="skraćenice">{{ user.abbreviations_count || 0 }}</td>
+              <td data-label="Glasovi">{{ user.votes_count || 0 }}</td>
+              <td data-label="Komentari">{{ user.comments_count || 0 }}</td>
+              <td data-label="Akcije" class="actions">
+                <button *ngIf="
+                    !isUserAdmin(user.role) && !isUserModerator(user.role) && canPerformUserAction(user.role)
+                  " class="btn btn-sm btn-primary" (click)="promoteUser(user.id)" role="button" tabindex="0"
+                  (keyup.enter)="promoteUser(user.id)" title="Unapredi korisnika">
+                  ⬆️ Unaprijedi
+                </button>
+                <button *ngIf="
+                    isUserModerator(user.role) &&
+                    canPerformUserAction(user.role)
+                  " class="btn btn-sm btn-secondary" (click)="demoteUser(user.id)" role="button" tabindex="0"
+                  (keyup.enter)="demoteUser(user.id)" title="Snizi prava">
+                  ⬇️ Snizi prava
+                </button>
+                <button *ngIf="
+                    !isUserAdmin(user.role) && canPerformUserAction(user.role)
+                  " class="btn btn-sm btn-danger" (click)="deleteUser(user.id)" role="button" tabindex="0"
+                  (keyup.enter)="deleteUser(user.id)" title="Obriši korisnika">
+                  🗑️ Obriši
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!isLoadingUsers && filteredUsers.length === 0" class="no-data">
+        Nema korisnika za prikaz.
+      </div>
+    </div>
+
+    <!-- Abbreviations Tab -->
+    <div *ngIf="activeTab === 'abbreviations'" class="tab-content abbreviations-tab">
+      <div class="tab-header">
+        <h2>Sve skraćenice</h2>
+        <div class="header-controls">
+          <div class="filters">
+            <div class="search-bar">
+              <input type="text" [(ngModel)]="abbreviationSearchTerm" placeholder="Pretraži skraćenice..."
+                class="search-input" />
+              <button class="search-btn" (click)="searchAbbreviations()">Pretraži</button>
+            </div>
+            <select [(ngModel)]="selectedCategory" class="category-filter">
+              <option value="">Sve kategorije</option>
+              <option *ngFor="let category of availableCategories" [value]="category">
+                {{ category }}
+              </option>
+            </select>
+          </div>
+          <div class="batch-actions" *ngIf="filteredAbbreviations.length > 0">
+            <span class="results-count">{{ filteredAbbreviations.length }} skraćenica</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="isLoadingAbbreviations" class="loading">
+        Učitavanje skraćenica...
+      </div>
+
+      <div *ngIf="!isLoadingAbbreviations && filteredAbbreviations.length > 0" class="abbreviations-table">
+        <table>
+          <thead>
+            <tr>
+              <th>skraćenica</th>
+              <th>Puno ime</th>
+              <th>Kategorija</th>
+              <th>Autor</th>
+              <th>Glasovi</th>
+              <th>Komentari</th>
+              <th>Status</th>
+              <th>Kreirana</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let abbr of filteredAbbreviations">
+              <td data-label="skraćenica">
+                <strong>{{ abbr.abbreviation }}</strong>
+              </td>
+              <td data-label="Puno ime">{{ abbr.meaning }}</td>
+              <td data-label="Kategorija">
+                <span class="category-badge">{{ abbr.category }}</span>
+              </td>
+              <td data-label="Autor">{{ abbr.user.name }}</td>
+              <td data-label="Glasovi">
+                <span class="votes-display" [class]="getVotesClass(abbr.votes_sum)">
+                  {{ abbr.votes_sum }}
+                </span>
+              </td>
+              <td data-label="Komentari">{{ abbr.comments_count }}</td>
+              <td data-label="Status">
+                <span class="status-badge" [class]="getStatusClass(abbr.status)">
+                  {{ getStatusDisplayName(abbr.status) }}
+                </span>
+              </td>
+              <td data-label="Kreirana">{{ formatDate(abbr.created_at) }}</td>
+              <td data-label="Akcije" class="actions">
+                <button class="btn btn-sm btn-danger action-btn" (click)="deleteAbbreviation(abbr.id)" role="button"
+                  tabindex="0" (keyup.enter)="deleteAbbreviation(abbr.id)" title="Obriši skraćenicu">
+                  🗑️ Obriši
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!isLoadingAbbreviations && filteredAbbreviations.length === 0" class="no-data">
+        Nema skraćenica za prikaz.
+      </div>
+    </div>
+
+    <!-- Moderation Tab -->
+    <div *ngIf="activeTab === 'moderation'" class="tab-content moderation-tab">
+      <div class="tab-header">
+        <h2>skraćenice na čekanju za odobrenje</h2>
+        <div class="pending-stats" *ngIf="pendingAbbreviations.length > 0">
+          <span class="pending-count">{{ pendingAbbreviations.length }} skraćenice čekaju odobrenje</span>
+        </div>
+      </div>
+
+      <div *ngIf="isLoadingPending" class="loading">
+        Učitavanje skraćenica na čekanju...
+      </div>
+
+      <div *ngIf="!isLoadingPending && pendingAbbreviations.length > 0" class="pending-list">
+        <div *ngFor="let abbr of pendingAbbreviations" class="pending-item">
+          <div class="abbr-info">
+            <div class="abbr-main">
+              <h4>{{ abbr.abbreviation }} - {{ abbr.meaning }}</h4>
+              <p class="abbr-description" *ngIf="abbr.description">
+                {{ truncateText(abbr.description, 150) }}
+              </p>
+              <div class="abbr-meta">
+                <span class="category">📂 {{ abbr.category }}</span>
+                <span class="author">👤 Autor: {{ abbr.user.name }}</span>
+                <span class="date">📅 {{ formatDate(abbr.created_at) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="moderation-actions">
+            <button class="btn btn-success" (click)="approveAbbreviation(abbr.id)" role="button" tabindex="0"
+              (keyup.enter)="approveAbbreviation(abbr.id)" title="Odobri skraćenicu">
+              ✅ Odobri
+            </button>
+            <button class="btn btn-danger" (click)="rejectAbbreviation(abbr.id)" role="button" tabindex="0"
+              (keyup.enter)="rejectAbbreviation(abbr.id)" title="Odbij skraćenicu">
+              ❌ Odbij
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoadingPending && pendingAbbreviations.length === 0" class="no-data">
+        Nema skraćenica na čekanju za odobrenje.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Confirmation Modal -->
+  <div *ngIf="showConfirmModal" class="modal-overlay" (click)="closeConfirmModal()" role="button" tabindex="0"
+    (keyup.enter)="closeConfirmModal()" (keyup.escape)="closeConfirmModal()" tabindex="0" role="dialog"
+    aria-label="Potvrda akcije">
+    <div class="confirmation-modal" (click)="$event.stopPropagation()" role="button" tabindex="0"
+      (keyup.enter)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="0">
+      <div class="modal-header">
+        <h3>{{ confirmationData.title }}</h3>
+        <button class="close-btn" (click)="closeConfirmModal()" role="button" tabindex="0"
+          (keyup.enter)="closeConfirmModal()">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>{{ confirmationData.message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeConfirmModal()" role="button" tabindex="0"
+          (keyup.enter)="closeConfirmModal()">
+          Odustani
+        </button>
+        <button class="btn btn-danger" (click)="confirmAction()" role="button" tabindex="0"
+          (keyup.enter)="confirmAction()">
+          Potvrdi
+        </button>
+      </div>
+    </div>
+  </div>

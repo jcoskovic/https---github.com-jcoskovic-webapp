@@ -1,0 +1,719 @@
+<div class="abbreviations-container">
+  <!-- Search and Filters -->
+  <div class="search-section">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="currentSearchTerm" placeholder="Pretraži skraćenice..." class="search-input"
+        (keyup.enter)="searchAbbreviations()" />
+      <button (click)="searchAbbreviations()" role="button" tabindex="0" (keyup.enter)="searchAbbreviations()"
+        class="search-btn">
+        Pretraži
+      </button>
+    </div>
+
+    <!-- Search Popup -->
+    <div *ngIf="showSearchPopup" class="search-popup-overlay" (click)="closeSearchPopup()">
+      <div class="search-popup" (click)="$event.stopPropagation()">
+        <div class="search-popup-header">
+          <h3>Rezultati pretrage</h3>
+          <button class="close-btn" (click)="closeSearchPopup()">&times;</button>
+        </div>
+        <div class="search-popup-content">
+          <div *ngFor="let result of searchResults" class="search-result-item" (click)="selectSearchResult(result)">
+            <div class="result-abbreviation">{{ result.abbreviation }}</div>
+            <div class="result-meaning">{{ result.meaning }}</div>
+            <div class="result-category" *ngIf="result.category">{{ result.category }}</div>
+          </div>
+          <div *ngIf="searchResults.length === 0" class="no-results">
+            Nema rezultata za "{{ currentSearchTerm }}"
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <select [value]="searchService.getCurrentFilters().category"
+        (change)="onCategoryChange($any($event.target).value)" class="filter-select">
+        <option value="">Sve kategorije</option>
+        <option *ngFor="let category of categories()" [value]="category">
+          {{ category }}
+        </option>
+      </select>
+
+      <!-- Skeleton while resolving user info -->
+      <div *ngIf="userInfoLoading()" class="auth-skeleton" aria-hidden="true">
+        <div class="skeleton-pill skeleton-add"></div>
+      </div>
+
+      <!-- Only logged in users can add abbreviations -->
+      <button *ngIf="!userInfoLoading() && currentUser()" (click)="
+          canUseProtectedFeatures()
+            ? (showAddForm = !showAddForm)
+            : showEmailVerificationRequired()
+        " role="button" tabindex="0" (keyup.enter)="
+          canUseProtectedFeatures()
+            ? (showAddForm = !showAddForm)
+            : showEmailVerificationRequired()
+        " class="add-btn" [class.disabled]="!canUseProtectedFeatures()" [title]="
+          !isEmailVerified()
+            ? 'Potvrdite email adresu za dodavanje skraćenica'
+            : ''
+        ">
+        {{ showAddForm ? "Otkaži" : "+ Dodaj skraćenicu" }}
+      </button>
+
+      <!-- Message for non-logged users -->
+      <div *ngIf="!userInfoLoading() && !currentUser()" class="login-required-message">
+        <p>Prijavite se za dodavanje skraćenica</p>
+        <div class="auth-buttons">
+          <button (click)="showLogin()" role="button" tabindex="0" (keyup.enter)="showLogin()" class="login-btn">
+            Prijavi se
+          </button>
+          <button (click)="showRegister()" role="button" tabindex="0" (keyup.enter)="showRegister()"
+            class="register-btn">
+            Registriraj se
+          </button>
+        </div>
+      </div>
+
+      <button (click)="
+          currentUser()
+            ? canUseProtectedFeatures()
+              ? exportToPdf()
+              : showEmailVerificationRequired()
+            : showLoginRequired()
+        " role="button" tabindex="0" (keyup.enter)="
+          currentUser()
+            ? canUseProtectedFeatures()
+              ? exportToPdf()
+              : showEmailVerificationRequired()
+            : showLoginRequired()
+        " class="export-btn" [class.disabled]="currentUser() && !canUseProtectedFeatures()" [title]="
+          !currentUser()
+            ? 'Prijavite se za export'
+            : !isEmailVerified()
+              ? 'Potvrdite email adresu za export'
+              : ''
+        ">
+        📄 Izvoz u PDF
+      </button>
+    </div>
+
+    <!-- Email verification notification -->
+    <div *ngIf="currentUser() && !isEmailVerified()" class="email-verification-banner">
+      <div class="verification-content">
+        <span class="verification-icon">✉️</span>
+        <div class="verification-text">
+          <strong>Potvrdite vašu email adresu</strong>
+          <p>
+            Proverite vaš email i kliknite na link za potvrdu da biste
+            aktivirali račun.
+          </p>
+        </div>
+        <button (click)="resendEmailVerification()" role="button" tabindex="0" (keyup.enter)="resendEmailVerification()"
+          class="resend-btn" [disabled]="isResendingVerification">
+          {{ isResendingVerification ? "Šalje se..." : "Pošalji ponovo" }}
+        </button>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- Add Form -->
+  <div *ngIf="showAddForm && currentUser()" class="add-form">
+    <h3>Dodaj novu skraćenicu</h3>
+    <form (ngSubmit)="addAbbreviation()" #addForm="ngForm">
+      <div class="form-row">
+        <input name="abbreviation" [(ngModel)]="newAbbreviation.abbreviation"
+          (ngModelChange)="onAbbreviationChange($event)" placeholder="skraćenica (npr. API)" required class="form-input" />
+        <button type="button" (click)="getSuggestions()" role="button" tabindex="0" (keyup.enter)="getSuggestions()"
+          [disabled]="
+            !newAbbreviation.abbreviation ||
+            suggestionService.getCurrentState().isLoading
+          " class="suggest-btn">
+          {{
+          suggestionService.getCurrentState().isLoading
+          ? "Učitavanje..."
+          : "🔍 Predloži značenja"
+          }}
+        </button>
+      </div>
+
+      <!-- Suggestions Section -->
+      <div *ngIf="suggestionService.getCurrentState().suggestions.length > 0" class="suggestions-section">
+        <div *ngIf="suggestionService.getCurrentState().suggestions.length > 0" class="suggestions-list">
+          <h4>💡 Predložena značenja</h4>
+          <div *ngFor="
+              let suggestion of suggestionService.getCurrentState().suggestions
+            " class="suggestion-item">
+            <div class="suggestion-header">
+              <button type="button" (click)="applySuggestion(suggestion)" role="button" tabindex="0"
+                (keyup.enter)="applySuggestion(suggestion)" class="suggestion-apply-btn">
+                ✓ Koristi
+              </button>
+              <span class="suggestion-source">{{ suggestion.source }}</span>
+              <span class="suggestion-confidence">{{
+                suggestion.confidence_score * 100 | number: "1.0-0"
+                }}%</span>
+            </div>
+
+            <div class="suggestion-content">
+              <div class="suggestion-meaning">{{ suggestion.meaning }}</div>
+              <div class="suggestion-original" *ngIf="suggestion.original_meaning">
+                <strong>Originalno:</strong> {{ suggestion.original_meaning }}
+              </div>
+              <div class="suggestion-category">{{ suggestion.category }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <input name="meaning" [(ngModel)]="newAbbreviation.meaning" placeholder="Značenje" required
+          class="form-input" />
+      </div>
+
+      <div class="form-row">
+        <textarea name="description" [(ngModel)]="newAbbreviation.description"
+          placeholder="Opis (detaljan opis skraćenice - opcionalno)" rows="3" class="form-textarea"></textarea>
+      </div>
+
+      <div class="form-row">
+        <select name="category" [(ngModel)]="newAbbreviation.category" required class="form-select">
+          <option value="">Izaberite kategoriju</option>
+          <option value="Tehnologija">Tehnologija</option>
+          <option value="Poslovanje">Poslovanje</option>
+          <option value="Zdravstvo">Zdravstvo</option>
+          <option value="Obrazovanje">Obrazovanje</option>
+          <option value="Vlada">Vlada</option>
+          <option value="Financije">Financije</option>
+          <option value="Marketing">Marketing</option>
+          <option value="HR">HR</option>
+          <option value="Pravni">Pravni</option>
+          <option value="Proizvod">Proizvod</option>
+          <option value="Općenito">Općenito</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="!addForm.form.valid" class="submit-btn">
+          Dodaj skraćenicu
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Personal Recommendations Section -->
+  <div class="trending-section personal-recommendations" *ngIf="currentUser()">
+    <h3>Osobne preporuke</h3>
+
+    <!-- Load recommendations button -->
+    <div *ngIf="showRecommendationsButton()" class="recommendations-button-container">
+      <button (click)="onLoadRecommendationsClick()" role="button" tabindex="0"
+        (keyup.enter)="onLoadRecommendationsClick()" class="load-recommendations-btn">
+        📝 Prikaži moje preporuke
+      </button>
+      <p class="recommendations-info">Kliknite da vidite personalizirane preporuke na temelju vaših interesa</p>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="personalRecommendationsLoading()" class="recommendations-loading">
+      <div class="loading-spinner"></div>
+      <p>Učitavanje osobnih preporuka...</p>
+    </div>
+
+    <!-- Recommendations grid -->
+    <div *ngIf="
+        !personalRecommendationsLoading() &&
+        personalRecommendations().length > 0
+      " class="trending-grid">
+      <div *ngFor="let item of personalRecommendations()" class="trending-item personal-item"
+        (click)="onTrendingClick(item)" (keyup.enter)="onTrendingClick(item)" (keyup.space)="onTrendingClick(item)"
+        tabindex="0" role="button" [attr.aria-label]="'Pregled skraćenice ' + item.abbreviation">
+        <h4>{{ item.abbreviation }}</h4>
+        <p>{{ item.meaning }}</p>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading">
+    <p>Učitavanje...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error()" class="error">
+    <p>{{ error() }}</p>
+    <button (click)="loadAbbreviations()" role="button" tabindex="0" (keyup.enter)="loadAbbreviations()"
+      class="retry-btn">
+      Pokušaj ponovo
+    </button>
+  </div>
+
+  <!-- Abbreviations List -->
+  <div *ngIf="!loading() && !error()" class="abbreviations-section">
+    <!-- Sorting Controls -->
+    <div class="sorting-controls">
+      <h3>📝 Objavljene skraćenice</h3>
+      <div class="sort-options">
+        <label for="sortBy">Sortiraj po:</label>
+        <select id="sortBy" [(ngModel)]="selectedSortOption" class="sort-select">
+          <option value="created_at_desc">Datumu (najnovije prvo)</option>
+          <option value="created_at_asc">Datumu (najstarije prvo)</option>
+          <option value="votes_sum_desc">Broju lajkova (najviše prvo)</option>
+          <option value="votes_sum_asc">Broju lajkova (najmanje prvo)</option>
+          <option value="comments_count_desc">Broju komentara (najviše prvo)</option>
+          <option value="comments_count_asc">Broju komentara (najmanje prvo)</option>
+        </select>
+
+        <button (click)="applySorting()" class="sort-apply-btn">
+          Sortiraj
+        </button>
+      </div>
+    </div>
+
+    <div class="abbreviations-grid">
+      <div *ngFor="
+        let abbr of displayedAbbreviations();
+        trackBy: trackByAbbreviationId
+      " class="abbreviation-card clickable-card" (click)="showAbbreviationDetails(abbr)"
+        (keyup.enter)="showAbbreviationDetails(abbr)" (keyup.space)="showAbbreviationDetails(abbr)" role="button"
+        tabindex="0" [attr.aria-label]="'Otvori detalje skraćenice ' + abbr.abbreviation">
+        <div class="card-header">
+          <h3 class="abbreviation-title">{{ abbr.abbreviation }}</h3>
+          <span class="category-badge" *ngIf="abbr.category">{{
+            abbr.category
+            }}</span>
+        </div>
+
+        <div class="card-content">
+          <p class="meaning">{{ abbr.meaning }}</p>
+          <p class="description" *ngIf="abbr.description">
+            {{ abbr.description }}
+          </p>
+
+          <div class="metadata">
+            <span class="author">Dodao: {{ abbr.user?.name || "Nepoznato" }}</span>
+            <span class="date">{{ abbr.created_at | date: "dd.MM.yyyy" }}</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <div class="voting">
+            <!-- Net score badge -->
+            <div class="net-score" [class.positive]="votingService.getCurrentScore(abbr.id) > 0"
+              [class.negative]="votingService.getCurrentScore(abbr.id) < 0">
+              {{ votingService.getCurrentScore(abbr.id) > 0 ? "+" : ""
+              }}{{ votingService.getCurrentScore(abbr.id) }}
+            </div>
+
+            <!-- Voting buttons - disabled for non-logged users or unverified emails -->
+            <button (click)="
+              $event.stopPropagation();
+              currentUser()
+                ? isEmailVerified()
+                  ? vote(abbr.id, 'up')
+                  : showEmailVerificationRequired()
+                : showLoginRequired()
+            " role="button" tabindex="0" (keyup.enter)="
+              currentUser()
+                ? isEmailVerified()
+                  ? vote(abbr.id, 'up')
+                  : showEmailVerificationRequired()
+                : showLoginRequired()
+            " [class]="votingService.getVoteButtonClass(abbr.id, 'up')" [disabled]="!votingService.canVote(abbr.id)"
+              [title]="
+              !currentUser()
+                ? 'Prijavite se za glasovanje'
+                : !isEmailVerified()
+                  ? 'Potvrdite email adresu za glasovanje'
+                  : ''
+            ">
+              👍
+              {{
+              votingService.getCurrentScore(abbr.id) > 0
+              ? "+" + votingService.getCurrentScore(abbr.id)
+              : ""
+              }}
+            </button>
+            <button (click)="
+              $event.stopPropagation();
+              currentUser()
+                ? isEmailVerified()
+                  ? vote(abbr.id, 'down')
+                  : showEmailVerificationRequired()
+                : showLoginRequired()
+            " role="button" tabindex="0" (keyup.enter)="
+              currentUser()
+                ? isEmailVerified()
+                  ? vote(abbr.id, 'down')
+                  : showEmailVerificationRequired()
+                : showLoginRequired()
+            " [class]="votingService.getVoteButtonClass(abbr.id, 'down')" [disabled]="!votingService.canVote(abbr.id)"
+              [title]="
+              !currentUser()
+                ? 'Prijavite se za glasovanje'
+                : !isEmailVerified()
+                  ? 'Potvrdite email adresu za glasovanje'
+                  : ''
+            ">
+              👎
+              {{
+              votingService.getCurrentScore(abbr.id) < 0 ? votingService.getCurrentScore(abbr.id) : "" }} </button>
+          </div>
+
+          <div class="comments">
+            <span class="comment-count">💬 {{ debugCommentCount(abbr) }}</span>
+            <button (click)="$event.stopPropagation(); toggleComments(abbr.id)" role="button" tabindex="0"
+              (keyup.enter)="toggleComments(abbr.id)" class="comment-btn">
+              {{ isCommentsExpanded(abbr.id) ? "Sakrij" : "Komentari" }}
+            </button>
+          </div>
+
+          <!-- Delete button - only for owner, moderators or admin -->
+          <div class="admin-actions" *ngIf="
+            currentUser() &&
+            (abbr.user_id === currentUser()!.id ||
+              canModerate())
+          ">
+            <button (click)="$event.stopPropagation(); deleteAbbreviation(abbr)" role="button" tabindex="0"
+              (keyup.enter)="deleteAbbreviation(abbr)" class="delete-btn" title="Obriši skraćenicu">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div *ngIf="isCommentsExpanded(abbr.id)" class="comments-section">
+          <!-- Add comment form - only for logged in users with verified emails -->
+          <div *ngIf="currentUser()" class="add-comment">
+            <textarea #commentText placeholder="Dodaj komentar..." class="comment-input"
+              [disabled]="!canUseProtectedFeatures()"></textarea>
+            <button (click)="handleAddComment(abbr.id, commentText.value, commentText)" role="button" tabindex="0"
+              (keyup.enter)="
+              handleAddComment(abbr.id, commentText.value, commentText)
+            " class="add-comment-btn" [disabled]="!canUseProtectedFeatures()" [title]="
+              !isEmailVerified() ? 'Potvrdite email adresu za komentiranje' : ''
+            ">
+              Dodaj
+            </button>
+          </div>
+
+          <!-- Email verification required message for comments -->
+          <div *ngIf="currentUser() && !isEmailVerified()" class="email-verification-required-comment">
+            <p>⚠️ Potvrdite vašu email adresu da biste mogli komentirati</p>
+          </div>
+
+          <!-- Login required message for adding comments -->
+          <div *ngIf="!currentUser()" class="login-required-comment">
+            <p>Prijavite se za dodavanje komentara</p>
+          </div>
+
+          <div class="comments-list">
+            <div *ngFor="let comment of abbr.comments" class="comment">
+              <div class="comment-author">
+                {{ comment.user?.name || "Nepoznato" }}
+              </div>
+              <div class="comment-content">{{ comment.content }}</div>
+              <div class="comment-date">
+                {{ comment.created_at | date: "dd.MM.yyyy HH:mm" }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More Button -->
+    <div class="load-more-section" *ngIf="!loading() && hasMorePages()">
+      <button (click)="loadMoreAbbreviations()" role="button" tabindex="0" (keyup.enter)="loadMoreAbbreviations()"
+        [disabled]="loadingMore()" class="load-more-btn">
+        <span *ngIf="!loadingMore()">Učitaj više skraćenica</span>
+        <span *ngIf="loadingMore()">Učitavanje...</span>
+      </button>
+
+      <div class="pagination-info" *ngIf="totalCount() > 0">
+        Prikazano {{ abbreviations().length }} od {{ totalCount() }} skraćenica
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div *ngIf="showLoginModal" class="modal-overlay" (click)="hideLogin()" (keyup.escape)="hideLogin()" tabindex="0"
+      role="dialog" aria-label="Dijalog za prijavu">
+      <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="0">
+        <div class="modal-header">
+          <h2>Prijava</h2>
+          <button (click)="hideLogin()" class="close-btn">&times;</button>
+        </div>
+
+        <form (ngSubmit)="login()" class="login-form">
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" [(ngModel)]="loginCredentials.email" name="email" required class="form-input"
+              placeholder="Unesite email" />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Lozinka:</label>
+            <input type="password" id="password" [(ngModel)]="loginCredentials.password" name="password" required
+              class="form-input" placeholder="Unesite lozinku" />
+          </div>
+
+          <div class="forgot-password-link">
+            <p>
+              <a href="#" (click)="showForgotPassword(); $event.preventDefault()" role="button" tabindex="0"
+                (keyup.enter)="showForgotPassword(); $event.preventDefault()" class="forgot-password-link">Zaboravili
+                ste
+                lozinku?</a>
+            </p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="hideLogin()" role="button" tabindex="0" (keyup.enter)="hideLogin()"
+              class="cancel-btn">
+              Odustani
+            </button>
+            <button type="submit" class="submit-btn">Prijavite se</button>
+          </div>
+
+          <div class="auth-switch">
+            <p>
+              Nemate račun?
+              <button type="button" (click)="switchToRegister()" role="button" tabindex="0"
+                (keyup.enter)="switchToRegister()" class="switch-btn">
+                Registrirajte se
+              </button>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div *ngIf="showRegisterModal" class="modal-overlay" (click)="hideRegister()" (keyup.escape)="hideRegister()"
+      tabindex="0" role="dialog" aria-label="Dijalog za registraciju">
+      <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="0">
+        <div class="modal-header">
+          <h2>Registracija</h2>
+          <button (click)="hideRegister()" class="close-btn">&times;</button>
+        </div>
+
+        <form (ngSubmit)="register()" class="register-form">
+          <div class="form-group">
+            <label for="registerName">Ime i prezime:</label>
+            <input type="text" id="registerName" [(ngModel)]="registerCredentials.name" name="name" required
+              class="form-input" placeholder="Unesite ime i prezime" />
+          </div>
+
+          <div class="form-group">
+            <label for="registerEmail">Email:</label>
+            <input type="email" id="registerEmail" [(ngModel)]="registerCredentials.email" name="email" required
+              class="form-input" placeholder="Unesite email" />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPassword">Lozinka:</label>
+            <input type="password" id="registerPassword" [(ngModel)]="registerCredentials.password" name="password"
+              required minlength="8" class="form-input" placeholder="Minimalno 8 karaktera" />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPasswordConfirm">Potvrdite lozinku:</label>
+            <input type="password" id="registerPasswordConfirm" [(ngModel)]="registerCredentials.password_confirmation"
+              name="password_confirmation" required class="form-input" placeholder="Ponovite lozinku" />
+          </div>
+
+          <div class="form-group">
+            <label for="registerDepartment">Odjel (opcionalno):</label>
+            <input type="text" id="registerDepartment" [(ngModel)]="registerCredentials.department" name="department"
+              class="form-input" placeholder="Unesite odjele" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="hideRegister()" role="button" tabindex="0" (keyup.enter)="hideRegister()"
+              class="cancel-btn">
+              Odustani
+            </button>
+            <button type="submit" class="submit-btn">Registrirajte se</button>
+          </div>
+
+          <div class="auth-switch">
+            <p>
+              Već imate račun?
+              <button type="button" (click)="switchToLogin()" role="button" tabindex="0" (keyup.enter)="switchToLogin()"
+                class="switch-btn">
+                Prijavite se
+              </button>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div *ngIf="showForgotPasswordModal" class="modal-overlay" (click)="hideForgotPassword()"
+      (keyup.escape)="hideForgotPassword()" tabindex="0" role="dialog" aria-label="Dijalog za resetovanje lozinke">
+      <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="0">
+        <div class="modal-header">
+          <h2>Resetovanje lozinke</h2>
+          <button (click)="hideForgotPassword()" class="close-btn">
+            &times;
+          </button>
+        </div>
+
+        <form (ngSubmit)="sendForgotPassword()" class="forgot-password-form">
+          <div class="form-group">
+            <label for="forgotEmail">Email adresa:</label>
+            <input type="email" id="forgotEmail" [(ngModel)]="forgotPasswordEmail" name="forgotEmail" required
+              class="form-input" placeholder="Unesite vaš email" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="hideForgotPassword()" role="button" tabindex="0"
+              (keyup.enter)="hideForgotPassword()" class="cancel-btn">
+              Odustani
+            </button>
+            <button type="submit" class="submit-btn">Pošaljite link</button>
+          </div>
+
+          <div class="auth-switch">
+            <p>
+              <button type="button" (click)="switchToLogin()" role="button" tabindex="0" (keyup.enter)="switchToLogin()"
+                class="switch-btn">
+                Nazad na prijavu
+              </button>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <app-user-profile [showModal]="showUserProfile" [user]="currentUser()" (closeProfileModal)="hideUserProfileModal()"
+      (logoutUser)="logout()">
+    </app-user-profile>
+
+    <!-- Abbreviation Details Modal -->
+    <div *ngIf="selectedAbbreviation" class="modal-overlay" (click)="hideAbbreviationDetails()"
+      (keyup.escape)="hideAbbreviationDetails()" tabindex="0" role="dialog" aria-label="Detalji skraćenice">
+      <div class="modal-content abbreviation-details-modal" (click)="$event.stopPropagation()"
+        (keyup)="$event.stopPropagation()" tabindex="0">
+        <div class="modal-header">
+          <h2>{{ selectedAbbreviation.abbreviation }}</h2>
+          <button (click)="hideAbbreviationDetails()" class="close-btn">
+            &times;
+          </button>
+        </div>
+
+        <div class="abbreviation-details">
+          <div class="detail-section">
+            <h3>Značenje</h3>
+            <p>{{ selectedAbbreviation.meaning }}</p>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedAbbreviation.description">
+            <h3>Opis</h3>
+            <p>{{ selectedAbbreviation.description }}</p>
+          </div>
+
+          <div class="detail-section">
+            <h3>Kategorija</h3>
+            <p>{{ selectedAbbreviation.category || "Nema kategorije" }}</p>
+          </div>
+
+          <div class="detail-section" *ngIf="selectedAbbreviation.user">
+            <h3>Dodao</h3>
+            <p>
+              {{ selectedAbbreviation.user.name }} -
+              {{ selectedAbbreviation.created_at | date: "dd.MM.yyyy HH:mm" }}
+            </p>
+          </div>
+
+          <div class="detail-section voting-section">
+            <h3>Glasovanje</h3>
+            <div class="voting-stats">
+              <span class="vote-stat positive">👍
+                {{
+                votingService.getCurrentScore(selectedAbbreviation.id) > 0
+                ? votingService.getCurrentScore(selectedAbbreviation.id)
+                : 0
+                }}</span>
+              <span class="vote-stat negative">👎
+                {{
+                votingService.getCurrentScore(selectedAbbreviation.id) < 0 ?
+                  -votingService.getCurrentScore(selectedAbbreviation.id) : 0 }}</span>
+                  <span class="vote-stat net" [class.positive]="
+                votingService.getCurrentScore(selectedAbbreviation.id) > 0
+              " [class.negative]="
+                votingService.getCurrentScore(selectedAbbreviation.id) < 0
+              ">
+                    Ukupno:
+                    {{
+                    votingService.getCurrentScore(selectedAbbreviation.id) > 0
+                    ? "+"
+                    : ""
+                    }}{{ votingService.getCurrentScore(selectedAbbreviation.id) }}
+                  </span>
+            </div>
+
+            <!-- Voting buttons -->
+            <div class="modal-voting" *ngIf="currentUser()">
+              <button (click)="vote(selectedAbbreviation.id, 'up')" role="button" tabindex="0"
+                (keyup.enter)="vote(selectedAbbreviation.id, 'up')" [class]="
+                votingService.getVoteButtonClass(selectedAbbreviation.id, 'up')
+              ">
+                ↑ Pozitivno
+              </button>
+              <button (click)="vote(selectedAbbreviation.id, 'down')" role="button" tabindex="0"
+                (keyup.enter)="vote(selectedAbbreviation.id, 'down')" [class]="
+                votingService.getVoteButtonClass(
+                  selectedAbbreviation.id,
+                  'down'
+                )
+              ">
+                ↓ Negativno
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-section comments-section">
+            <h3>Komentari ({{ selectedAbbreviation.comments?.length || 0 }})</h3>
+
+            <!-- Add comment -->
+            <div *ngIf="currentUser()" class="add-comment-modal">
+              <textarea [(ngModel)]="modalComment" placeholder="Dodaj komentar..." class="comment-input"></textarea>
+              <button (click)="addCommentToModal()" role="button" tabindex="0" (keyup.enter)="addCommentToModal()"
+                [disabled]="!modalComment || !modalComment.trim()" class="add-comment-btn">
+                Dodaj komentar
+              </button>
+            </div>
+
+            <!-- Comments list -->
+            <div class="comments-list" *ngIf="
+              selectedAbbreviation.comments &&
+              selectedAbbreviation.comments.length > 0
+            ">
+              <div *ngFor="let comment of selectedAbbreviation.comments" class="comment">
+                <div class="comment-author">
+                  {{ comment.user?.name || "Nepoznato" }}
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+                <div class="comment-date">
+                  {{ comment.created_at | date: "dd.MM.yyyy HH:mm" }}
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="
+              !selectedAbbreviation.comments ||
+              selectedAbbreviation.comments.length === 0
+            " class="no-comments">
+              <p>Nema komentara. Budite prvi koji će komentirati!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

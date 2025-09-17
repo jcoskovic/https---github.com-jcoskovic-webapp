@@ -1,0 +1,126 @@
+<!-- Search komponenta -->
+<div class="search-container">
+  <div class="search-header">
+    <h2>Pretraži skraćenice</h2>
+    <p>Pronađi skraćenice po nazivu, značenju ili opisu</p>
+  </div>
+
+  <div class="search-form">
+    <div class="search-input-group">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchInput($event)"
+        placeholder="Unesite pojam za pretragu..."
+        class="search-input"
+      />
+      <button
+        (click)="clearSearch()"
+        role="button"
+        tabindex="0"
+        (keyup.enter)="clearSearch()"
+        class="clear-btn"
+        *ngIf="searchTerm"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="filters">
+      <select
+        [(ngModel)]="selectedCategory"
+        (change)="onCategoryChange()"
+        class="filter-select"
+      >
+        <option value="">Sve kategorije</option>
+        <option *ngFor="let category of categories" [value]="category">
+          {{ category }}
+        </option>
+      </select>
+
+      <select
+        [(ngModel)]="selectedDepartment"
+        (change)="onDepartmentChange()"
+        class="filter-select"
+      >
+        <option value="">Svi odjeli</option>
+        <option *ngFor="let department of departments" [value]="department">
+          {{ department }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="search-results" *ngIf="!loading">
+    <div class="results-header" *ngIf="searchResults.length > 0">
+      <h3>Rezultati pretrage ({{ totalResults }})</h3>
+    </div>
+
+    <div class="no-results" *ngIf="searchResults.length === 0 && searchTerm">
+      <p>Nema rezultata za "{{ searchTerm }}"</p>
+      <p>Pokušajte s drugim pojmom ili promijenite filtere.</p>
+    </div>
+
+    <div class="abbreviation-list">
+      <div *ngFor="let abbreviation of searchResults" class="abbreviation-card">
+        <div class="abbreviation-header">
+          <h4 class="abbreviation-title">{{ abbreviation.abbreviation }}</h4>
+          <span class="votes-badge"
+            >{{ abbreviation.votes_count }} glasova</span
+          >
+        </div>
+
+        <p class="abbreviation-meaning">{{ abbreviation.meaning }}</p>
+
+        <p class="abbreviation-description" *ngIf="abbreviation.description">
+          {{ abbreviation.description }}
+        </p>
+
+        <div class="abbreviation-meta">
+          <span class="category" *ngIf="abbreviation.category">
+            {{ abbreviation.category }}
+          </span>
+          <span class="department" *ngIf="abbreviation.department">
+            {{ abbreviation.department }}
+          </span>
+          <span class="author"> Autor: {{ abbreviation.user.name }} </span>
+          <span class="date">
+            {{ abbreviation.created_at | date: "dd.MM.yyyy" }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button
+        (click)="goToPage(currentPage - 1)"
+        role="button"
+        tabindex="0"
+        (keyup.enter)="goToPage(currentPage - 1)"
+        [disabled]="currentPage <= 1"
+        class="pagination-btn"
+      >
+        Prethodna
+      </button>
+
+      <span class="page-info">
+        Stranica {{ currentPage }} od {{ totalPages }}
+      </span>
+
+      <button
+        (click)="goToPage(currentPage + 1)"
+        role="button"
+        tabindex="0"
+        (keyup.enter)="goToPage(currentPage + 1)"
+        [disabled]="currentPage >= totalPages"
+        class="pagination-btn"
+      >
+        Sljedeća
+      </button>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <p>Učitavanje...</p>
+  </div>
+</div>

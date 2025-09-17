@@ -1,0 +1,6 @@
+# Optional Codespaces overrides for Abbrevio
+# Present to satisfy devcontainer CLI (-f docker-compose.codespaces.yml) even if no overrides are needed.
+# Add per-Codespaces tweaks here (e.g., resource limits, temporary volume mounts, disabled services, etc.)
+
+version: "3.9"
+services: {}

@@ -1,0 +1,161 @@
+<div class="email-verification-container">
+  <div class="verification-card">
+    <div class="verification-header">
+      <h2>✉️ Potvrda email adrese</h2>
+    </div>
+
+    <div class="verification-content">
+      <!-- Loading state for auto-verification -->
+      <div *ngIf="isVerifying" class="loading-section">
+        <div class="spinner"></div>
+        <p>Potvrđujemo vašu email adresu...</p>
+      </div>
+
+      <!-- Verification success -->
+      <div *ngIf="verificationSuccess && !isVerifying" class="success-section">
+        <div class="success-icon">✅</div>
+        <h3>Email adresa je uspješno potvrđena!</h3>
+        <p>
+          Vaš račun je sada aktivan. Bit ćete preusmjereni na glavnu stranicu za
+          3 sekunde.
+        </p>
+        <button
+          class="primary-btn"
+          (click)="navigateToLogin()"
+          role="button"
+          tabindex="0"
+          (keyup.enter)="navigateToLogin()"
+        >
+          Nastavi
+        </button>
+      </div>
+
+      <!-- Verification error -->
+      <div
+        *ngIf="verificationError && !isVerifying && !verificationSuccess"
+        class="error-section"
+      >
+        <div class="error-icon">❌</div>
+        <h3>Greška pri potvrdi email adrese</h3>
+        <p class="error-message">{{ verificationError }}</p>
+
+        <!-- Resend verification form -->
+        <div class="resend-section">
+          <h4>Zatražite novi link za potvrdu</h4>
+          <form [formGroup]="resendForm" (ngSubmit)="resendVerification()">
+            <div class="form-group">
+              <label for="email">Email adresa</label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Unesite vašu email adresu"
+                class="form-input"
+              />
+              <div
+                *ngIf="resendForm.get('email')?.hasError('required')"
+                class="error-text"
+              >
+                Email adresa je obavezna
+              </div>
+              <div
+                *ngIf="resendForm.get('email')?.hasError('email')"
+                class="error-text"
+              >
+                Unesite ispravnu email adresu
+              </div>
+            </div>
+
+            <div class="button-section">
+              <button
+                class="primary-btn"
+                type="submit"
+                [disabled]="resendForm.invalid || isResending"
+              >
+                <span *ngIf="isResending" class="spinner-small"></span>
+                <span *ngIf="!isResending">Pošalji novi link</span>
+                <span *ngIf="isResending">Šalje se...</span>
+              </button>
+
+              <button
+                class="secondary-btn"
+                type="button"
+                (click)="navigateToLogin()"
+                role="button"
+                tabindex="0"
+                (keyup.enter)="navigateToLogin()"
+              >
+                Nazad na prijavu
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Initial state - when no auto-verification params -->
+      <div
+        *ngIf="!isVerifying && !verificationSuccess && !verificationError"
+        class="initial-section"
+      >
+        <div class="info-icon">ℹ️</div>
+        <h3>Potvrdite vašu email adresu</h3>
+        <p>
+          Da biste završili registraciju, potvrdite vašu email adresu klikom na
+          link koji vam je poslat.
+        </p>
+
+        <!-- Resend verification form -->
+        <div class="resend-section">
+          <h4>Niste primili email? Zatražite novi link</h4>
+          <form [formGroup]="resendForm" (ngSubmit)="resendVerification()">
+            <div class="form-group">
+              <label for="email-resend">Email adresa</label>
+              <input
+                id="email-resend"
+                type="email"
+                formControlName="email"
+                placeholder="Unesite vašu email adresu"
+                class="form-input"
+              />
+              <div
+                *ngIf="resendForm.get('email')?.hasError('required')"
+                class="error-text"
+              >
+                Email adresa je obavezna
+              </div>
+              <div
+                *ngIf="resendForm.get('email')?.hasError('email')"
+                class="error-text"
+              >
+                Unesite ispravnu email adresu
+              </div>
+            </div>
+
+            <div class="button-section">
+              <button
+                class="primary-btn"
+                type="submit"
+                [disabled]="resendForm.invalid || isResending"
+              >
+                <span *ngIf="isResending" class="spinner-small"></span>
+                <span *ngIf="!isResending">Pošalji link</span>
+                <span *ngIf="isResending">Šalje se...</span>
+              </button>
+
+              <button
+                class="secondary-btn"
+                type="button"
+                (click)="navigateToLogin()"
+                role="button"
+                tabindex="0"
+                (keyup.enter)="navigateToLogin()"
+              >
+                Nazad na prijavu
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

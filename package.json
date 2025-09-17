@@ -1,0 +1,39 @@
+{
+  "name": "abbrevio",
+  "version": "1.0.0",
+  "description": "Web aplikacija za upravljanje skraćenicama u organizaciji",
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "build": "docker-compose build",
+    "frontend": "cd frontend && npm start",
+    "backend": "cd backend && php artisan serve",
+    "ml-service": "cd ml-service && python app.py",
+    "setup:frontend": "cd frontend && npm install",
+    "setup:backend": "cd backend && composer install && cp .env.example .env && php artisan key:generate",
+    "setup:ml": "cd ml-service && pip install -r requirements.txt",
+    "setup": "npm run setup:frontend && npm run setup:backend && npm run setup:ml",
+    "migrate": "cd backend && php artisan migrate --seed",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && php artisan test",
+    "lint": "cd frontend && npm run lint"
+  },
+  "keywords": [
+    "abbreviations",
+    "angular",
+    "laravel",
+    "machine-learning",
+    "api"
+  ],
+  "author": "Your Organization",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-organization/abbrevio.git"
+  },
+  "dependencies": {
+    "@angular/common": "^20.2.4",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.2.4"
+  }
+}

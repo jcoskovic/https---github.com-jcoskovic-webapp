@@ -1,0 +1,111 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: abbrevio_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: abbrevio
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: abbrevio_user
+      MYSQL_PASSWORD: abbrevio_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - abbrevio_network
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4;'
+
+  # phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: abbrevio_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: abbrevio_user
+      PMA_PASSWORD: abbrevio_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - abbrevio_network
+
+  # Laravel Backend
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: abbrevio_backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./docker/backend/php.ini:/usr/local/etc/php/conf.d/local.ini
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    networks:
+      - abbrevio_network
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=abbrevio
+      - DB_USERNAME=abbrevio_user
+      - DB_PASSWORD=abbrevio_password
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: abbrevio_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - abbrevio_network
+
+  # Python ML Service
+  ml-service:
+    build:
+      context: .
+      dockerfile: docker/ml-service/Dockerfile
+    container_name: abbrevio_ml
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./ml-service:/app
+    networks:
+      - abbrevio_network
+
+  # Mailpit for email testing
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: abbrevio_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+    networks:
+      - abbrevio_network
+
+volumes:
+  mysql_data:
+
+networks:
+  abbrevio_network:
+    driver: bridge

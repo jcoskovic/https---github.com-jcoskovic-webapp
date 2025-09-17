@@ -1,0 +1,62 @@
+{
+  "name": "Abbrevio Full Stack",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "../docker-compose.codespaces.yml"
+  ],
+  "service": "backend",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [
+    4200,
+    8000,
+    5001,
+    8080,
+    8025
+  ],
+  "portsAttributes": {
+    "4200": {
+      "label": "🌐 Frontend (Angular)",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "8000": {
+      "label": "🚀 Backend API (Laravel)",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "5001": {
+      "label": "🤖 ML Service (Python)",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "8080": {
+      "label": "📊 phpMyAdmin",
+      "onAutoForward": "silent",
+      "visibility": "private"
+    },
+    "8025": {
+      "label": "📧 Mailpit",
+      "onAutoForward": "silent",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": ".devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "angular.ng-template",
+        "bmewburn.vscode-intelephense-client",
+        "ms-python.python",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-json"
+      ],
+      "settings": {
+        "php.suggest.basic": false,
+        "typescript.preferences.importModuleSpecifier": "relative"
+      }
+    }
+  }
+}

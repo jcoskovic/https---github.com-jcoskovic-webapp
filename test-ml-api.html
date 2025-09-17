@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ML API</title>
+</head>
+<body>
+    <h1>Test ML API Endpoints</h1>
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        const results = document.getElementById('results');
+        
+        async function testMLEndpoints() {
+            const endpoints = [
+                '/ml/trending',
+                '/ml/recommendations/1',
+                '/ml/recommendations/personalized/4'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(API_BASE + endpoint);
+                    const data = await response.json();
+                    
+                    results.innerHTML += `
+                        <h3>${endpoint}</h3>
+                        <p>Status: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <hr>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `
+                        <h3>${endpoint}</h3>
+                        <p>Error: ${error.message}</p>
+                        <hr>
+                    `;
+                }
+            }
+        }
+        
+        testMLEndpoints();
+    </script>
+</body>
+</html>

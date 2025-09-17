@@ -1,0 +1,6 @@
+{
+    "name": "Admin User",
+    "email": "admin@abbrevio.com",
+    "password": "admin123",
+    "password_confirmation": "admin123"
+}

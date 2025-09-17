@@ -1,0 +1,132 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>📝 Abbrevio</h1>
+      <p>Upravljanje skraćenicama </p>
+    </div>
+
+    <!-- Login Form -->
+    <div *ngIf="showLogin() && !showForgotPassword()" class="auth-form">
+      <h2>Prijava</h2>
+      <form (ngSubmit)="login()" class="form">
+        <div class="form-group">
+          <label for="loginEmail">Email:</label>
+          <input type="email" id="loginEmail" [(ngModel)]="loginCredentials.email" name="email" required
+            class="form-input" placeholder="Unesite email" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Lozinka:</label>
+          <input type="password" id="loginPassword" [(ngModel)]="loginCredentials.password" name="password" required
+            class="form-input" placeholder="Unesite lozinku" [disabled]="isLoading()" />
+        </div>
+
+        <div class="forgot-password-link">
+          <button type="button" (click)="showForgotPasswordForm()" class="link-btn" [disabled]="isLoading()">
+            Zaboravili ste lozinku?
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="isLoading()">
+            <span *ngIf="!isLoading()">Prijavite se</span>
+            <span *ngIf="isLoading()" class="loading-spinner">Prijava u toku..</span>
+          </button>
+        </div>
+
+        <div class="auth-switch">
+          <p>
+            Nemate račun?
+            <button type="button" (click)="switchToRegister()" class="link-btn" [disabled]="isLoading()">
+              Registrirajte se
+            </button>
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Register Form -->
+    <div *ngIf="!showLogin() && !showForgotPassword()" class="auth-form">
+      <h2>Registracija</h2>
+      <form (ngSubmit)="register()" class="form">
+        <div class="form-group">
+          <label for="registerName">Ime i prezime:</label>
+          <input type="text" id="registerName" [(ngModel)]="registerCredentials.name" name="name" required
+            class="form-input" placeholder="Unesite ime i prezime" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-group">
+          <label for="registerEmail">Email:</label>
+          <input type="email" id="registerEmail" [(ngModel)]="registerCredentials.email" name="email" required
+            class="form-input" placeholder="Unesite email" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-group">
+          <label for="registerPassword">Lozinka:</label>
+          <input type="password" id="registerPassword" [(ngModel)]="registerCredentials.password" name="password"
+            required minlength="8" class="form-input" placeholder="Minimalno 8 karaktera" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-group">
+          <label for="registerPasswordConfirm">Potvrdite lozinku:</label>
+          <input type="password" id="registerPasswordConfirm" [(ngModel)]="registerCredentials.password_confirmation"
+            name="password_confirmation" required class="form-input" placeholder="Ponovite lozinku"
+            [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-group">
+          <label for="registerDepartment">Odjel (opcionalno):</label>
+          <input type="text" id="registerDepartment" [(ngModel)]="registerCredentials.department" name="department"
+            class="form-input" placeholder="Unesite odjel" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="isLoading()">
+            <span *ngIf="!isLoading()">Registrirajte se</span>
+            <span *ngIf="isLoading()" class="loading-spinner"> Registriracija u toku...</span>
+          </button>
+        </div>
+
+        <div class="auth-switch">
+          <p>
+            Već imate račun?
+            <button type="button" (click)="switchToLogin()" class="link-btn" [disabled]="isLoading()">
+              Prijavite se
+            </button>
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div *ngIf="showForgotPassword()" class="auth-form">
+      <h2>Resetovanje lozinke</h2>
+      <p class="forgot-password-description">
+        Unesite vašu email adresu i poslaćemo vam link za resetovanje lozinke.
+      </p>
+
+      <form (ngSubmit)="sendPasswordReset()" class="form">
+        <div class="form-group">
+          <label for="forgotEmail">Email:</label>
+          <input type="email" id="forgotEmail" [(ngModel)]="forgotPasswordEmail" name="email" required
+            class="form-input" placeholder="Unesite email" [disabled]="isLoading()" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="isLoading()">
+            <span *ngIf="!isLoading()">Pošaljite link</span>
+            <span *ngIf="isLoading()" class="loading-spinner">⏳ Šaljem...</span>
+          </button>
+        </div>
+
+        <div class="auth-switch">
+          <p>
+            <button type="button" (click)="switchToLogin()" class="link-btn" [disabled]="isLoading()">
+              Nazad na prijavu
+            </button>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

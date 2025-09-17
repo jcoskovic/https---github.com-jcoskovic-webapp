@@ -1,0 +1,106 @@
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()" role="button" tabindex="0"
+  (keyup.enter)="closeModal()" (keyup.escape)="closeModal()" tabindex="0" role="dialog"
+  aria-label="Korisničke postavke">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="button" tabindex="0"
+    (keyup.enter)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="0">
+    <div class="modal-header">
+      <h2>Korisničke postavke</h2>
+      <button (click)="closeModal()" role="button" tabindex="0" (keyup.enter)="closeModal()" class="close-btn">
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- User Info Section -->
+      <div class="section">
+        <h3>Podaci o korisniku</h3>
+        <div class="user-info">
+          <div class="info-row">
+            <label for="user-name">Ime:</label>
+            <span id="user-name">{{ user?.name }}</span>
+          </div>
+          <div class="info-row">
+            <label for="user-email">Email:</label>
+            <span id="user-email">{{ user?.email }}</span>
+            <span class="verification-status" [class]="getEmailVerificationClass()">
+              {{ getEmailVerificationText() }}
+            </span>
+          </div>
+          <div class="info-row" *ngIf="user?.department">
+            <label for="user-department">Odjeljenje:</label>
+            <span id="user-department">{{ user?.department }}</span>
+          </div>
+          <div class="info-row">
+            <label for="user-role">Uloga:</label>
+            <span id="user-role" class="role-badge" [class]="getRoleBadgeClass()">{{ getRoleDisplayName() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password Section -->
+      <div class="section">
+        <h3>
+          <button type="button" (click)="togglePasswordChange()" role="button" tabindex="0"
+            (keyup.enter)="togglePasswordChange()" class="toggle-btn">
+            {{ showPasswordChange ? "▼" : "▶" }} Promijeni lozinku
+          </button>
+        </h3>
+
+        <form *ngIf="showPasswordChange" (ngSubmit)="changePassword()" class="password-form">
+          <div class="form-group">
+            <label for="currentPassword">Trenutna lozinka:</label>
+            <input type="password" id="currentPassword" [(ngModel)]="passwordData.currentPassword"
+              name="currentPassword" required class="form-input" placeholder="Unesite trenutnu lozinku" />
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">Nova lozinka:</label>
+            <input type="password" id="newPassword" [(ngModel)]="passwordData.newPassword" name="newPassword" required
+              minlength="8" class="form-input" placeholder="Minimalno 8 karaktera" />
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Potvrdite lozinku:</label>
+            <input type="password" id="confirmPassword" [(ngModel)]="passwordData.confirmPassword"
+              name="confirmPassword" required class="form-input" placeholder="Ponovite novu lozinku" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" (click)="togglePasswordChange()" role="button" tabindex="0"
+              (keyup.enter)="togglePasswordChange()" class="cancel-btn">
+              Odustani
+            </button>
+            <button type="submit" class="submit-btn" [disabled]="isChangingPassword">
+              {{ isChangingPassword ? "Mijenjam..." : "Promijeni lozinku" }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Statistics Section -->
+      <div class="section" *ngIf="user?.abbreviations_count !== undefined">
+        <h3>Vaša aktivnost</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number">{{ user?.abbreviations_count || 0 }}</div>
+            <div class="stat-label">skraćenice</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ user?.votes_count || 0 }}</div>
+            <div class="stat-label">Glasovi</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ user?.comments_count || 0 }}</div>
+            <div class="stat-label">Komentari</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeModal()" role="button" tabindex="0" (keyup.enter)="closeModal()" class="close-modal-btn">
+        Zatvori
+      </button>
+    </div>
+  </div>
+</div>

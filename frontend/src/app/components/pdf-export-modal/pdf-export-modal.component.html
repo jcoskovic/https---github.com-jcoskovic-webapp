@@ -1,0 +1,94 @@
+<div class="pdf-export-modal">
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+        <span class="modal-icon">📄</span>
+        <h2 class="modal-title">Izvoz u PDF</h2>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="Pretraži skraćenice..." [(ngModel)]="searchTerm"
+                (input)="onSearchChange()" />
+        </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="filter-section">
+        <label class="filter-label">Filtriraj po kategoriji:</label>
+        <select class="category-filter" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+            <option value="">Sve kategorije</option>
+            <option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+            </option>
+        </select>
+    </div>
+
+    <!-- Abbreviations Selection -->
+    <div class="abbreviations-section">
+        <div class="section-header">
+            <h3 class="section-title">Odaberi skraćenice</h3>
+            <span class="selection-info">
+                {{ selectedAbbreviationIds.length }} od {{ filteredAbbreviations.length }} odabrano
+            </span>
+        </div>
+
+        <!-- Select All -->
+        <div class="select-all-container">
+            <div class="select-all-checkbox" (click)="toggleSelectAll()">
+                <input type="checkbox" id="select-all" [checked]="isAllSelected()"
+                    [indeterminate]="isPartiallySelected()" (click)="$event.stopPropagation()"
+                    (change)="toggleSelectAll()" />
+                <label for="select-all">
+                    {{ isAllSelected() ? 'Odaberi sve' : 'Odaberi sve' }}
+                </label>
+            </div>
+        </div>
+
+        <!-- Abbreviations List -->
+        <div class="abbreviations-list" *ngIf="filteredAbbreviations.length > 0">
+            <div *ngFor="let abbreviation of filteredAbbreviations; trackBy: trackByAbbreviationId"
+                class="abbreviation-item" [class.selected]="isAbbreviationSelected(abbreviation.id)"
+                (click)="toggleAbbreviationSelection(abbreviation.id)">
+                <div class="checkbox">
+                    <input type="checkbox" [id]="'abbr-' + abbreviation.id"
+                        [checked]="isAbbreviationSelected(abbreviation.id)" (click)="$event.stopPropagation()"
+                        (change)="toggleAbbreviationSelection(abbreviation.id)" />
+                </div>
+                <div class="abbreviation-content">
+                    <div class="abbreviation-title">{{ abbreviation.abbreviation }}</div>
+                    <div class="abbreviation-meaning">{{ abbreviation.meaning }}</div>
+                    <span class="abbreviation-category" *ngIf="abbreviation.category">
+                        {{ abbreviation.category }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" *ngIf="filteredAbbreviations.length === 0">
+            <div class="no-results-icon">🔍</div>
+            <div>Nema rezultata za vašu pretragu</div>
+        </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+            Otkaži
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onExport()"
+            [disabled]="selectedAbbreviationIds.length === 0 || isLoading">
+            <span class="btn-icon">📄</span>
+            Izvezi PDF ({{ selectedAbbreviationIds.length }})
+        </button>
+    </div>
+</div>

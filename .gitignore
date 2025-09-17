@@ -1,0 +1,91 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Frontend Build
+frontend/dist/
+frontend/build/
+frontend/.angular/
+
+# Backend Dependencies
+backend/vendor/
+
+
+# Laravel
+backend/.env
+backend/.env.backup
+backend/storage/logs/*.log
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/testing/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+backend/public/storage
+backend/storage/app/public/*
+
+# PHP
+backend/.phpunit.cache/
+backend/phpunit.xml
+
+# Python
+ml-service/__pycache__/
+ml-service/*.pyc
+ml-service/*.pyo
+ml-service/*.pyd
+ml-service/.Python
+ml-service/venv/
+ml-service/.venv/
+ml-service/pip-log.txt
+ml-service/pip-delete-this-directory.txt
+ml-service/.pytest_cache/
+
+# Docker
+.docker/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+
+# Build artifacts
+build/
+dist/
+
+# Test coverage
+coverage/
+.nyc_output/

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF Export</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            padding: 10px 20px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test PDF Export - Abbrevio</h1>
+
+    <div class="form-group">
+        <label for="search">Pretraživanje:</label>
+        <input type="text" id="search" placeholder="Unesite termin za pretraživanje...">
+    </div>
+
+    <div class="form-group">
+        <label for="category">Kategorija:</label>
+        <input type="text" id="category" placeholder="Unesite kategoriju...">
+    </div>
+
+    <div class="form-group">
+        <label for="format">Format:</label>
+        <select id="format">
+            <option value="simple">Jednostavan</option>
+            <option value="detailed">Detaljan</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <button onclick="exportPdf()">Izvozi PDF</button>
+        <button onclick="testEndpoint()">Test Endpoint</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        function showResult(message, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + (isError ? 'error' : 'success');
+            resultDiv.textContent = message;
+        }
+
+        async function exportPdf() {
+            const search = document.getElementById('search').value;
+            const category = document.getElementById('category').value;
+            const format = document.getElementById('format').value;
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (category) params.append('category', category);
+            params.append('format', format);
+
+            try {
+                showResult('Generiranje PDF-a...');
+
+                const response = await fetch(`http://localhost:8000/api/export/pdf?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/pdf',
+                        // Note: In real app, you would add Authorization header here
+                        // 'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Get the PDF blob
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `abbreviations_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showResult('PDF je uspješno generiran i preuzet!');
+            } catch (error) {
+                console.error('Error:', error);
+                showResult('Greška prilikom generiranja PDF-a: ' + error.message, true);
+            }
+        }
+
+        async function testEndpoint() {
+            try {
+                showResult('Testiranje endpoint-a...');
+
+                const response = await fetch('http://localhost:8000/api/export/pdf?format=simple', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const text = await response.text();
+                console.log('Response:', text);
+
+                if (response.ok) {
+                    showResult('Endpoint je dostupan! (Response: ' + response.status + ')');
+                } else {
+                    showResult('Endpoint vratio grešku: ' + response.status + ' - ' + text, true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showResult('Greška prilikom testiranja: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+
+</html>

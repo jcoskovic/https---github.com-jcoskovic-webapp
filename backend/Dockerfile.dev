@@ -1,0 +1,41 @@
+# Development Dockerfile for Laravel backend
+FROM php:8.2-fpm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy composer files first for better layer caching
+COPY composer.json composer.lock ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN composer install --no-scripts
+
+# Copy entire application
+COPY . .
+
+# Copy custom PHP configuration
+COPY ../docker/backend/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# Create directories and set permissions
+RUN mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache storage/logs \
+    && chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
+
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]

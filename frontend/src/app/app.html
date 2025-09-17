@@ -1,0 +1,43 @@
+<!-- Main application template -->
+<div class="app-container">
+  <!-- Global route/auth loading indicator -->
+  <div class="route-loading" *ngIf="authUiLoading">
+    <div class="route-loading-bar"></div>
+  </div>
+
+  <!-- Navigation for authenticated users -->
+  <nav class="app-nav" *ngIf="!authUiLoading && authService.isAuthenticated()">
+    <div class="nav-content">
+      <div class="nav-brand">
+        <a routerLink="/" class="brand-link">📝 Abbrevio</a>
+        <p class="brand-subtitle">Upravljanje skraćenicama </p>
+      </div>
+      <div class="nav-links">
+        <button *ngIf="!isOnHomePage() && !isOnModeratorPage()" class="nav-link home-btn" (click)="goToHomepage()"
+          role="button" tabindex="0" (keyup.enter)="goToHomepage()">Početna</button>
+        <button *ngIf="isOnModeratorPage()" class="nav-link home-btn" (click)="goToHomepage()" role="button"
+          tabindex="0" (keyup.enter)="goToHomepage()">Početna</button>
+        <button class="nav-link profile-btn" (click)="showUserProfile()" role="button" tabindex="0"
+          (keyup.enter)="showUserProfile()">
+          👤 {{ getCurrentUser()?.name || "Profil" }}
+        </button>
+        <a *ngIf="!isOnModeratorPage() && !isOnAdminPage() && (authService.isAdmin() || authService.canModerate())"
+          [routerLink]="authService.isAdmin() ? '/admin' : '/moderator'" class="nav-link admin-link">
+          👑 {{ authService.isAdmin() ? 'Admin Panel' : 'Moderator Panel' }}
+        </a>
+        <button class="nav-link logout-btn" (click)="logout()" role="button" tabindex="0" (keyup.enter)="logout()">
+          Odjava
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content" [class.dimmed]="authUiLoading && !isOnAdminPage()">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- User Profile Modal -->
+  <app-user-profile [showModal]="showUserProfileModal" [user]="getCurrentUser()"
+    (closeProfileModal)="hideUserProfile()">
+  </app-user-profile>
+</div>

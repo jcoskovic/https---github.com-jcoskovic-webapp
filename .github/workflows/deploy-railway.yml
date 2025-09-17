@@ -1,0 +1,53 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install Railway CLI
+      run: npm install -g @railway/cli
+      
+    - name: Deploy to Railway
+      run: |
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway up --service backend --detach
+        railway up --service frontend --detach  
+        railway up --service ml-service --detach
+        
+        # Wait for backend to be ready
+        sleep 30
+        
+        # Run database migrations
+        railway run --service backend php artisan migrate --force
+        railway run --service backend php artisan db:seed --force --class=ProductionSeeder
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deployment successful!"
+          echo "Frontend: https://${{ secrets.RAILWAY_FRONTEND_DOMAIN }}"
+          echo "Backend: https://${{ secrets.RAILWAY_BACKEND_DOMAIN }}"
+        else
+          echo "❌ Deployment failed!"
+        fi
