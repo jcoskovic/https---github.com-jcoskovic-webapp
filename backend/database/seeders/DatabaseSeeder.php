@@ -58,6 +58,16 @@ class DatabaseSeeder extends Seeder
             'email' => 'moj.admin@example.com',
             'password' => bcrypt('password123'),
             'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        // Tvoj custom korisnik
+        $myUser = User::create([
+            'name' => 'Tvoje Ime',
+            'email' => 'tvoj.email@example.com',
+            'password' => bcrypt('tvojpassword'),
+            'role' => 'user',
+            'email_verified_at' => now(),
         ]);
 
         // Create comprehensive sample abbreviations for ML demonstration

@@ -376,3 +376,17 @@ button {
 .mat-mdc-dialog-container {
   z-index: 10000 !important;
 }
+
+/* Additional fix specifically for PDF Export Modal */
+.pdf-export-modal-container {
+  z-index: 10001 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.pdf-export-modal-container .mat-mdc-dialog-container {
+  z-index: 10002 !important;
+  position: relative !important;
+}
