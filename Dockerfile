@@ -13,11 +13,11 @@ RUN rm -f package-lock.json frontend/package-lock.json
 
 # Clear npm cache and install dependencies with legacy peer deps
 RUN npm cache clean --force
-RUN npm install --legacy-peer-deps --no-package-lock
+RUN npm install --registry https://registry.npmjs.org/ --legacy-peer-deps --no-package-lock
 
 # Install frontend dependencies with fresh cache
 RUN cd frontend && npm cache clean --force
-RUN cd frontend && npm install --legacy-peer-deps
+RUN cd frontend && npm install --registry https://registry.npmjs.org/ --legacy-peer-deps
 
 # Copy source code
 COPY . .
